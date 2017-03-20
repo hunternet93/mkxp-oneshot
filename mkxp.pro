@@ -45,7 +45,8 @@ contains(BINDING, NULL) {
 unix {
 	CONFIG += c++11
 	PKGCONFIG += sigc++-2.0 pixman-1 vorbisfile \
-                 sdl2 SDL2_image SDL2_ttf SDL_sound physfs
+                 sdl2 SDL2_image SDL2_ttf SDL_sound physfs \
+                 gio-2.0
     LIBS += -ldl
 	macx: {
 		CONFIG -= app_bundle
@@ -252,7 +253,7 @@ BINDING_NULL {
 
 BINDING_MRI {
 	isEmpty(MRIVERSION) {
-		MRIVERSION = 2.2
+		MRIVERSION = 2.3
 	}
 
 	PKGCONFIG += ruby-$$MRIVERSION

@@ -16,6 +16,12 @@ static DWORD szStyleSize = sizeof(szStyle) - 1;
 static DWORD szTileSize = sizeof(szTile) - 1;
 static bool setStyle = false;
 static bool setTile = false;
+#elif __linux__
+#include <gio/gio.h>
+static GVariant *oldPictureURI;
+static GVariant *oldPictureOptions;
+static GVariant *oldPrimaryColor;
+static GVariant *oldColorShadingType;
 #endif
 
 RB_METHOD(wallpaperSet)
@@ -92,7 +98,28 @@ RB_METHOD(wallpaperSet)
 end:
 	if (hKey)
 		RegCloseKey(hKey);
-#else
+#elif __linux__
+    // GNOME 3 and related window managers
+    GSettings *settings;
+
+    settings = g_settings_new ("org.gnome.desktop.background");
+
+    if (!isCached) {
+        oldPictureURI = g_settings_get_value(settings, "picture-uri");
+        oldPictureOptions = g_settings_get_value(settings, "picture-options");
+        oldPrimaryColor = g_settings_get_value(settings, "primary-color");
+        oldColorShadingType = g_settings_get_value(settings, "color-shading-type");
+
+        isCached = true;
+    }
+    
+    g_settings_set_value(settings, "picture-uri", g_variant_new ("s", imgname.c_str()));
+    g_settings_set_value(settings, "picture-options", g_variant_new ("s", "centered"));
+
+    g_settings_set_value(settings, "primary-color", g_variant_new ("s", &color));
+    g_settings_set_value(settings, "color-shading-type", g_variant_new ("s", "solid"));
+
+    g_object_unref(settings);
 #endif
 	return Qnil;
 }
@@ -125,7 +152,21 @@ RB_METHOD(wallpaperReset)
 		if (hKey)
 			RegCloseKey(hKey);
 	}
-#else
+#elif __linux__
+    if (isCached) {
+        // GNOME 3 and related window managers
+        GSettings *settings;
+
+        settings = g_settings_new ("org.gnome.desktop.background");
+
+        g_settings_set_value(settings, "picture-uri", oldPictureURI);
+        g_settings_set_value(settings, "picture-options", oldPictureOptions);
+
+        g_settings_set_value(settings, "primary-color", oldPrimaryColor);
+        g_settings_set_value(settings, "color-shading-type", oldColorShadingType);
+
+        g_object_unref(settings);
+    }
 #endif
 	return Qnil;
 }
