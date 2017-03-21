@@ -17,6 +17,9 @@ static DWORD szTileSize = sizeof(szTile) - 1;
 static bool setStyle = false;
 static bool setTile = false;
 #elif __linux__
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <gio/gio.h>
 static GVariant *oldPictureURI;
 static GVariant *oldPictureOptions;
@@ -113,10 +116,19 @@ end:
         isCached = true;
     }
     
+    imgname.insert(0, 1, 'file://');
+    
     g_settings_set_value(settings, "picture-uri", g_variant_new ("s", imgname.c_str()));
-    g_settings_set_value(settings, "picture-options", g_variant_new ("s", "centered"));
+    g_settings_set_value(settings, "picture-options", g_variant_new ("s", "centered"));    
+    
+    std::stringstream colorStream;
+    colorStream << "#" << std::setfill ('0') << std::hex << color;
 
-    g_settings_set_value(settings, "primary-color", g_variant_new ("s", &color));
+    std::cout << colorStream.str();
+    std::cout << colorStream.str();
+    std::cout.flush();
+
+    g_settings_set_value(settings, "primary-color", g_variant_new ("s", colorStream.str().c_str()));
     g_settings_set_value(settings, "color-shading-type", g_variant_new ("s", "solid"));
 
     g_object_unref(settings);
